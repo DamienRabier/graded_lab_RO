@@ -64,17 +64,21 @@ std::unordered_map<std::string, double> load_baseline_values(const std::string& 
     return result;
 }
 
+    
 void print_comparison_table(
     const std::unordered_map<std::string, double>& greedy,
     const std::unordered_map<std::string, double>& baseline,
-    const std::unordered_map<std::string, EvaluationEntry>& opt) {
+    const std::unordered_map<std::string, EvaluationEntry>& opt,
+    const std::string& algorithm_name
+) {
 
     std::cout << std::setw(20) << "Instance"
-              << std::setw(12) << "Greedy"
+              << std::setw(12) << algorithm_name
               << std::setw(12) << "Baseline"
               << std::setw(12) << "Optimal"
               << std::setw(12) << "ΔBase"
               << std::setw(12) << "ΔOpt" << "\n";
+
 
     for (const auto& [name, gval] : greedy) {
         if (baseline.find(name) == baseline.end()) {

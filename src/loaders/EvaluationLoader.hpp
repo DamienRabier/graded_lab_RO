@@ -16,6 +16,8 @@ std::unordered_map<std::string, double> load_baseline_values(const std::string& 
 void print_comparison_table(
     const std::unordered_map<std::string, double>& greedy_scores,
     const std::unordered_map<std::string, double>& baseline,
-    const std::unordered_map<std::string, EvaluationEntry>& optimal);
+    const std::unordered_map<std::string, EvaluationEntry>& optimal,
+    const std::string& algorithm_name = "Greedy"
+);
 
 #endif
