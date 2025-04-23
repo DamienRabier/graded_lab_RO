@@ -2,60 +2,64 @@
 #include "solver/GreedySolver.hpp"
 #include "loaders/InstanceLoader.hpp"
 #include "loaders/EvaluationLoader.hpp"
+
 #include <iostream>
+#include <iomanip>
 #include <unistd.h>
 #include <limits.h>
-#include <iomanip>
 #include <unordered_map>
 
+// main loop
 int main() {
-    // Check current working directory, used for debugging only
+    // [Debug only] Affiche le répertoire de travail courant
     char cwd[PATH_MAX];
     if (getcwd(cwd, sizeof(cwd)) != nullptr) {
-        std::cout << "Current working directory: " << cwd << std::endl;
+        std::cout << "Répertoire de travail : " << cwd << "\n\n";
     } else {
-        perror("getcwd() error");
+        perror("Erreur getcwd()");
     }
 
-    std::string baseline_file = "instances/baselines.txt";
-    std::string instance_dir = "instances/";
-    std::string baseline_result_file = "instances/baselines_results.txt";
-    std::string optimal_result_file = "instances/opt.txt";
+    // paths, doit etre dans graded_lab/...
+    const std::string instance_directory = "instances/";
+    const std::string spec_file = instance_directory + "baselines.txt";
+    const std::string baseline_result_file = instance_directory + "baselines_results.txt";
+    const std::string optimal_result_file = instance_directory + "opt.txt";
 
-    // Charger spécifications des instances (nom + epsilon)
-    auto specs = load_instance_specs(baseline_file);
+    // Charger les spécifications des instances (fichier + epsilon temps/distance)
+    auto specs = load_instance_specs(spec_file);
 
-    // Résultats de l'algo greedy
+    // Dictionnaire pour stocker les scores de l'algo greedy
     std::unordered_map<std::string, double> greedy_scores;
 
-    std::cout << "=== Greedy Solver for all instances ===\n";
+    std::cout << "=== Résolution gloutonne pour chaque instance ===\n";
     for (const auto& spec : specs) {
-        std::string path = instance_dir + spec.filename;
-        TapInstance instance(path, spec.epsilon_time, spec.epsilon_distance);
+        std::string full_path = instance_directory + spec.filename;
+
+        // Chargement de l'instance TAP
+        TapInstance instance(full_path, spec.epsilon_time, spec.epsilon_distance);
+
+        // Exécution de l'algorithme glouton
         std::vector<int> solution = greedy_solve(instance);
         double interest = instance.solution_interest(solution);
-
         greedy_scores[spec.filename] = interest;
 
-        std::cout << "Instance: " << spec.filename << "\n";
-        std::cout << "  Valid: " << instance.is_valid_solution(solution) << "\n";
-        std::cout << "  Interest: " << interest << "\n";
-        std::cout << "  Time: " << instance.solution_time(solution) << "\n";
-        std::cout << "  Distance: " << instance.solution_distance(solution) << "\n";
-        std::cout << "  Solution: ";
-        for (int i : solution) std::cout << i << " ";
+        // Affichage des résultats pour l'instance
+        std::cout << "Instance : " << spec.filename << "\n";
+        std::cout << "  Solution valide     : " << std::boolalpha << instance.is_valid_solution(solution) << "\n";
+        std::cout << "  Intérêt total       : " << interest << "\n";
+        std::cout << "  Temps total         : " << instance.solution_time(solution) << "\n";
+        std::cout << "  Distance totale     : " << instance.solution_distance(solution) << "\n";
+        std::cout << "  Séquence sélectionnée : ";
+        for (int id : solution) std::cout << id << " ";
         std::cout << "\n\n";
     }
 
+    // Comparaison finale avec baseline et optima connus
     std::cout << "=== Résumé comparatif ===\n";
-
-    std::cout << " --- Greedy vs Baseline vs Optimal ---\n";
     auto baseline_values = load_baseline_values(baseline_result_file);
-    auto optimal_values = load_opt_values(optimal_result_file);
-
-    std::string algo_name = "Greedy";
-    print_comparison_table(greedy_scores, baseline_values, optimal_values, algo_name);
-    std::cout << "=== Résumé comparatif terminé ===\n";
+    auto optimal_values  = load_opt_values(optimal_result_file);
+    print_comparison_table(greedy_scores, baseline_values, optimal_values);
+    std::cout << "=== Fin du résumé ===\n";
 
     return 0;
 }
