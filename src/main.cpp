@@ -1,5 +1,6 @@
 #include "loaders/TapInstance.hpp"
 #include "solver/GreedySolver.hpp"
+#include "solver/GeneticSolver.hpp"
 #include "loaders/InstanceLoader.hpp"
 #include "loaders/EvaluationLoader.hpp"
 #include <iostream>
@@ -47,10 +48,51 @@ int main() {
         std::cout << "\n\n";
     }
 
+    // Résultats de l'algo génétique
+
+    std::unordered_map<std::string, double> genetic_scores;
+    std::cout << "=== Genetic Solver for all instances ===\n";
+
+    std::cout << "=== Genetic + 2-opt Solver ===\n";
+    for (const auto& spec : specs) {
+        std::cout << "Processing instance: " << spec.filename << "\n";
+
+        TapInstance inst(instance_dir + spec.filename,
+                        spec.epsilon_time,
+                        spec.epsilon_distance);
+
+        std::cout << "Instance loaded successfully.\n";
+
+        auto sol = genetic_solve(inst);
+
+        //add to genetic_scores
+        genetic_scores[spec.filename] = inst.solution_interest(sol);
+        std::cout << "Genetic solve completed.\n";
+
+        double interest = inst.solution_interest(sol);
+        std::cout << "Solution interest calculated.\n";
+
+        std::cout << "Instance: " << spec.filename << "\n";
+        std::cout << "  Valid: "    << inst.is_valid_solution(sol) << "\n";
+        std::cout << "  Interest: " << interest << "\n";
+        std::cout << "  Time: "     << inst.solution_time(sol)     << "\n";
+        std::cout << "  Dist: "     << inst.solution_distance(sol) << "\n\n";
+    }
+
+
     std::cout << "=== Résumé comparatif ===\n";
+
+    std::cout << "=== Greedy vs Baseline vs Optimal ===\n";
     auto baseline_values = load_baseline_values(baseline_result_file);
     auto optimal_values = load_opt_values(optimal_result_file);
-    print_comparison_table(greedy_scores, baseline_values, optimal_values);
+
+    std::string algo_name = "Greedy";
+    print_comparison_table(greedy_scores, baseline_values, optimal_values, algo_name);
+
+    algo_name = "Genetic";
+    print_comparison_table(genetic_scores, baseline_values, optimal_values, algo_name);
+
+    std::cout << "=== Résumé comparatif terminé ===\n";
 
     return 0;
 }
